@@ -5,6 +5,7 @@ const db = require('./db');
 const routes = require('./api/routes');
 const scheduler = require('./jobs/scheduler');
 const logger = require('./utils/logger');
+const path = require('path');
 
 async function startServer() {
   const app = express();
@@ -24,6 +25,15 @@ async function startServer() {
   // Health endpoint
   app.get('/health', (req, res) => {
     res.json({ status: 'ok', timestamp: new Date().toISOString() });
+  });
+
+  // Admin Panel Route
+  app.get('/admin', (req, res) => {
+    const isLocalhost = req.ip === '::1' || req.ip === '127.0.0.1' || req.ip === '::ffff:127.0.0.1';
+    if (!isLocalhost) {
+      return res.status(403).send('Forbidden: Admin access is only allowed from localhost');
+    }
+    res.sendFile(path.join(__dirname, 'public', 'admin.html'));
   });
 
   // API Routes

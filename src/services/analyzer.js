@@ -11,11 +11,15 @@ function analyzeWord(word) {
   let vowel_count = 0;
   let consonant_count = 0;
   const letterCount = {};
+  const foundVowels = [];
   
   for (const char of upperWord) {
     if (/[A-Z]/.test(char)) {
       if (vowels.includes(char)) {
         vowel_count++;
+        if (!foundVowels.includes(char)) {
+          foundVowels.push(char);
+        }
       } else {
         consonant_count++;
       }
@@ -28,9 +32,12 @@ function analyzeWord(word) {
     .filter(char => letterCount[char] > 1)
     .join(',');
     
+  const vowel_letters = foundVowels.join(',');
+
   return {
     letter_count: upperWord.length,
     vowel_count,
+    vowel_letters,
     consonant_count,
     repeated_letters,
     first_letter: upperWord[0] || ''

@@ -53,25 +53,46 @@ const saveManual = async (req, res) => {
   try {
     const data = req.body;
     
-    if (!data.date || !data.puzzle_number || !data.word) {
-      return res.status(400).json({ error: 'Missing required fields' });
+    if (!data.word || !data.puzzle_number) {
+      return res.status(400).json({ error: 'Missing required fields: word and puzzle_number' });
     }
 
-    await wordleService.saveManualWordle(data);
+    const result = await wordleService.saveManualWordle(data);
     
     // Invalidate cache
     cache.data = null;
     cache.timestamp = 0;
 
-    res.json({ success: true, message: 'Puzzle saved manually' });
+    res.json(result);
   } catch (error) {
     logger.error('API Error: saveManual', error);
     res.status(500).json({ error: error.message || 'Internal Server Error' });
   }
 };
 
+const fetchManual = async (req, res) => {
+  try {
+    // Calling the same processing logic as the daily cron job
+    const result = await wordleService.processDailyWordle();
+    
+    // Invalidate cache
+    cache.data = null;
+    cache.timestamp = 0;
+
+    if (result.success) {
+      res.json(result);
+    } else {
+      res.status(500).json({ success: false, error: 'Fetch failed, check server logs' });
+    }
+  } catch (error) {
+    logger.error('API Error: fetchManual', error);
+    res.status(500).json({ success: false, error: error.message || 'Internal Server Error' });
+  }
+};
+
 module.exports = {
   getRecent,
   getAll,
-  saveManual
+  saveManual,
+  fetchManual
 };

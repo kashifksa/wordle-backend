@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Wordle Admin Panel</title>
+  <style>
+    body { 
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; 
+      max-width: 600px; 
+      margin: 40px auto; 
+      padding: 20px; 
+      text-align: center; 
+    }
+    .panel {
+      background: #f9f9f9;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      padding: 30px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    button { 
+      padding: 12px 24px; 
+      font-size: 16px; 
+      font-weight: bold;
+      cursor: pointer; 
+      background-color: #4CAF50; 
+      color: white; 
+      border: none; 
+      border-radius: 4px;
+      transition: background-color 0.2s;
+    }
+    button:hover {
+      background-color: #45a049;
+    }
+    button:disabled { 
+      background-color: #cccccc; 
+      cursor: not-allowed; 
+    }
+    #result { 
+      margin-top: 25px; 
+      padding: 15px; 
+      border-radius: 4px; 
+      display: none; 
+      font-weight: 500;
+    }
+    .success { 
+      background-color: #dff0d8; 
+      color: #3c763d; 
+      border: 1px solid #d6e9c6; 
+    }
+    .error { 
+      background-color: #f2dede; 
+      color: #a94442; 
+      border: 1px solid #ebccd1; 
+    }
+    #last-fetch { 
+      margin-top: 20px; 
+      font-size: 14px; 
+      color: #666; 
+    }
+    hr {
+      margin: 30px 0;
+      border: 0;
+      border-top: 1px solid #ddd;
+    }
+    .form-group {
+      margin-bottom: 15px;
+      text-align: left;
+    }
+    .form-group label {
+      display: block;
+      margin-bottom: 5px;
+      font-weight: bold;
+    }
+    .form-group input {
+      width: 100%;
+      padding: 10px;
+      box-sizing: border-box;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      font-size: 16px;
+    }
+    #manualBtn {
+      background-color: #2196F3;
+      margin-top: 10px;
+    }
+    #manualBtn:hover {
+      background-color: #0b7dda;
+    }
+  </style>
+</head>
+<body>
+  <div class="panel">
+    <h1>Wordle Admin Panel</h1>
+    <p>Manually trigger the daily Wordle fetch and processing job.</p>
+    
+    <button id="fetchBtn" onclick="triggerFetch()">Fetch Latest Wordle</button>
+    
+    <div id="result"></div>
+    <div id="last-fetch">Last fetch: Unknown</div>
+
+    <hr>
+
+    <h2>Manual Entry</h2>
+    <p>Enter word and puzzle number. The date and hints will be automatically generated.</p>
+    
+    <div class="form-group">
+      <label for="wordInput">Word (5 letters)</label>
+      <input type="text" id="wordInput" placeholder="e.g., WOMAN" maxlength="5">
+    </div>
+    <div class="form-group">
+      <label for="puzzleInput">Puzzle Number</label>
+      <input type="number" id="puzzleInput" placeholder="e.g., 1771">
+    </div>
+    <button id="manualBtn" onclick="submitManual()">Submit Manual Entry</button>
+  </div>
+
+  <script>
+    async function triggerFetch() {
+      const btn = document.getElementById('fetchBtn');
+      const resultDiv = document.getElementById('result');
+      const lastFetchDiv = document.getElementById('last-fetch');
+      
+      btn.disabled = true;
+      btn.textContent = 'Fetching...';
+      resultDiv.style.display = 'none';
+      resultDiv.className = '';
+      
+      try {
+        const response = await fetch('/api/wordle/fetch', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          }
+        });
+        
+        const data = await response.json();
+        
+        resultDiv.style.display = 'block';
+        if (response.ok && data.success) {
+          resultDiv.className = 'success';
+          resultDiv.textContent = data.message || 'Fetch completed successfully.';
+          lastFetchDiv.textContent = 'Last fetch: ' + new Date().toLocaleString();
+        } else {
+          resultDiv.className = 'error';
+          resultDiv.textContent = data.error || 'Fetch failed.';
+        }
+      } catch (err) {
+        resultDiv.style.display = 'block';
+        resultDiv.className = 'error';
+        resultDiv.textContent = 'Network error or server unreachable.';
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'Fetch Latest Wordle';
+      }
+    }
+
+    async function submitManual() {
+      const btn = document.getElementById('manualBtn');
+      const resultDiv = document.getElementById('result');
+      const word = document.getElementById('wordInput').value.trim();
+      const puzzle_number = document.getElementById('puzzleInput').value.trim();
+
+      if (!word || !puzzle_number) {
+        resultDiv.style.display = 'block';
+        resultDiv.className = 'error';
+        resultDiv.textContent = 'Please enter both a word and a puzzle number.';
+        return;
+      }
+
+      btn.disabled = true;
+      btn.textContent = 'Processing...';
+      resultDiv.style.display = 'none';
+      resultDiv.className = '';
+
+      try {
+        const response = await fetch('/api/wordle/save', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ word, puzzle_number })
+        });
+        
+        const data = await response.json();
+        
+        resultDiv.style.display = 'block';
+        if (response.ok && data.success) {
+          resultDiv.className = 'success';
+          resultDiv.textContent = data.message || `Inserted successfully: ${data.word} (#${data.puzzle_number}) for date ${data.date}`;
+          document.getElementById('wordInput').value = '';
+          document.getElementById('puzzleInput').value = '';
+        } else {
+          resultDiv.className = 'error';
+          resultDiv.textContent = data.error || data.message || 'Submission failed.';
+        }
+      } catch (err) {
+        resultDiv.style.display = 'block';
+        resultDiv.className = 'error';
+        resultDiv.textContent = 'Network error or server unreachable.';
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'Submit Manual Entry';
+      }
+    }
+  </script>
+</body>
+</html>

@@ -9,7 +9,7 @@ async function generateHints(word) {
   try {
     // We assume an OpenAI-compatible API endpoint
     const response = await axios.post(
-      'https://api.openai.com/v1/chat/completions',
+      config.ai.apiUrl,
       {
         model: config.ai.model,
         messages: [{ role: 'user', content: prompt }],
