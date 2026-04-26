@@ -85,7 +85,7 @@ async function scrapeNYTimes() {
       let date = response.data.print_date || tomorrowInfo.dateStr;
       let puzzle_number = response.data.days_since_launch || tomorrowInfo.puzzleNumber;
       
-      let result = { date, puzzle_number, word, source: 'nyt' };
+      let result = { date, puzzle_number, word, source: 'nyt', url: tomorrowUrl };
       if (validateResult(result)) return result;
     }
   } catch (err) {
@@ -99,7 +99,7 @@ async function scrapeNYTimes() {
     let date = response.data.print_date || todayInfo.dateStr;
     let puzzle_number = response.data.days_since_launch || todayInfo.puzzleNumber;
     
-    let result = { date, puzzle_number, word, source: 'nyt' };
+    let result = { date, puzzle_number, word, source: 'nyt', url: todayUrl };
     if (validateResult(result)) return result;
   }
   
@@ -122,7 +122,7 @@ async function scrapeCNET() {
     // Placeholder for actual CNET extraction logic
     let word = "WOMAN"; 
     
-    let result = { date: info.dateStr, puzzle_number: info.puzzleNumber, word, source: 'cnet' };
+    let result = { date: info.dateStr, puzzle_number: info.puzzleNumber, word, source: 'cnet', url: url };
     if (validateResult(result)) return result;
   }
   throw new Error('CNET extraction failed or validation failed');
@@ -143,7 +143,7 @@ async function scrapeMashable() {
     // Placeholder for actual Mashable extraction logic
     let word = "WOMAN"; 
     
-    let result = { date: info.dateStr, puzzle_number: info.puzzleNumber, word, source: 'mashable' };
+    let result = { date: info.dateStr, puzzle_number: info.puzzleNumber, word, source: 'mashable', url: url };
     if (validateResult(result)) return result;
   }
   throw new Error('Mashable extraction failed or validation failed');
@@ -160,7 +160,7 @@ async function scrapeWordTips() {
     // Placeholder for actual WordTips extraction logic
     let word = "WOMAN"; 
     
-    let result = { date: info.dateStr, puzzle_number: info.puzzleNumber, word, source: 'wordtips' };
+    let result = { date: info.dateStr, puzzle_number: info.puzzleNumber, word, source: 'wordtips', url: url };
     if (validateResult(result)) return result;
   }
   throw new Error('WordTips extraction failed or validation failed');

@@ -20,6 +20,9 @@ async function processDailyWordle(isManual = false) {
   try {
     await db.pool.execute('ALTER TABLE wordle_data ADD COLUMN vowel_letters VARCHAR(32) DEFAULT NULL');
   } catch (e) {}
+  try {
+    await db.pool.execute('ALTER TABLE wordle_data ADD COLUMN url TEXT DEFAULT NULL');
+  } catch (e) {}
 
   // 1. Scrape data
   const scrapeResult = await scraper.fetchWordleData();
@@ -57,8 +60,8 @@ async function processDailyWordle(isManual = false) {
   const entryType = isManual ? 'manual' : 'auto';
   await db.pool.execute(
     `INSERT INTO wordle_data 
-      (date, puzzle_number, word, hint1, hint2, hint3, final_hint, vowel_count, vowel_letters, repeated_letters, source, entry_type) 
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      (date, puzzle_number, word, hint1, hint2, hint3, final_hint, vowel_count, vowel_letters, repeated_letters, source, entry_type, url) 
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     [
       scrapeResult.date,
       scrapeResult.puzzle_number,
@@ -71,7 +74,8 @@ async function processDailyWordle(isManual = false) {
       analysis.vowel_letters,
       analysis.repeated_letters,
       scrapeResult.source || 'unknown',
-      entryType
+      entryType,
+      scrapeResult.url || null
     ]
   );
 
@@ -200,8 +204,8 @@ async function saveManualWordle(data) {
   // 6. Insert
   await db.pool.execute(
     `INSERT INTO wordle_data 
-      (date, puzzle_number, word, hint1, hint2, hint3, final_hint, vowel_count, vowel_letters, repeated_letters, source, locale, entry_type) 
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      (date, puzzle_number, word, hint1, hint2, hint3, final_hint, vowel_count, vowel_letters, repeated_letters, source, locale, entry_type, url) 
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     [
       newDateStr,
       cleanPuzzleNumber,
@@ -215,7 +219,8 @@ async function saveManualWordle(data) {
       analysis.repeated_letters,
       'manual',
       locale,
-      'manual'
+      'manual',
+      data.url || null
     ]
   );
   
