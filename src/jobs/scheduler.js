@@ -10,7 +10,7 @@ async function runJob() {
   while (attempt < config.schedule.retryMaxAttempts) {
     try {
       logger.info(`Starting wordle fetch job... attempt ${attempt + 1}/${config.schedule.retryMaxAttempts}`);
-      const result = await wordleService.processDailyWordle();
+      const result = await wordleService.processDailyWordle(false);
       if (result.success) {
         logger.info('Wordle job completed successfully');
         break;

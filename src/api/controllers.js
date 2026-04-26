@@ -72,8 +72,8 @@ const saveManual = async (req, res) => {
 
 const fetchManual = async (req, res) => {
   try {
-    // Calling the same processing logic as the daily cron job
-    const result = await wordleService.processDailyWordle();
+    // Calling the same processing logic as the daily cron job, marking as manual
+    const result = await wordleService.processDailyWordle(true);
     
     // Invalidate cache
     cache.data = null;

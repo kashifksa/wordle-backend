@@ -57,7 +57,7 @@ CORS_ORIGIN=*
 # Time & Scheduling
 
 TIMEZONE=Asia/Karachi
-CRON_SCHEDULE=5 14 * * *     # 02:05 PM PKT
+CRON_SCHEDULE=35 15 * * *     # 03:35 PM PKT
 RETRY_INTERVAL_MIN=5
 RETRY_MAX_ATTEMPTS=12        # ~1 hour window
 

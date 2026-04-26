@@ -8,7 +8,7 @@ module.exports = {
   },
   schedule: {
     timezone: process.env.TIMEZONE || 'Asia/Karachi',
-    cron: process.env.CRON_SCHEDULE || '5 14 * * *',
+    cron: process.env.CRON_SCHEDULE || '35 15 * * *',
     retryIntervalMin: parseInt(process.env.RETRY_INTERVAL_MIN, 10) || 5,
     retryMaxAttempts: parseInt(process.env.RETRY_MAX_ATTEMPTS, 10) || 12
   },

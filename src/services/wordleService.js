@@ -4,12 +4,18 @@ const analyzer = require('./analyzer');
 const ai = require('./ai');
 const logger = require('../utils/logger');
 
-async function processDailyWordle() {
+async function processDailyWordle(isManual = false) {
   logger.info('Starting daily Wordle processing...');
   
   // 0. Schema migrations
   try {
+    await db.pool.execute('ALTER TABLE wordle_data MODIFY COLUMN date VARCHAR(10) NOT NULL');
+  } catch (e) {}
+  try {
     await db.pool.execute('ALTER TABLE wordle_data ADD COLUMN source VARCHAR(32) DEFAULT "unknown"');
+  } catch (e) {}
+  try {
+    await db.pool.execute('ALTER TABLE wordle_data ADD COLUMN entry_type VARCHAR(16) DEFAULT "auto"');
   } catch (e) {}
   try {
     await db.pool.execute('ALTER TABLE wordle_data ADD COLUMN vowel_letters VARCHAR(32) DEFAULT NULL');
@@ -48,10 +54,11 @@ async function processDailyWordle() {
 
 
   // 5. Insert into DB
+  const entryType = isManual ? 'manual' : 'auto';
   await db.pool.execute(
     `INSERT INTO wordle_data 
-      (date, puzzle_number, word, hint1, hint2, hint3, final_hint, vowel_count, vowel_letters, repeated_letters, source) 
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      (date, puzzle_number, word, hint1, hint2, hint3, final_hint, vowel_count, vowel_letters, repeated_letters, source, entry_type) 
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     [
       scrapeResult.date,
       scrapeResult.puzzle_number,
@@ -63,7 +70,8 @@ async function processDailyWordle() {
       analysis.vowel_count,
       analysis.vowel_letters,
       analysis.repeated_letters,
-      scrapeResult.source || 'unknown'
+      scrapeResult.source || 'unknown',
+      entryType
     ]
   );
 
@@ -101,6 +109,15 @@ async function getWordleDataForDates(locale = 'global') {
   if (rows.length > 0) result.today = rows[0];
   if (rows.length > 1) result.yesterday = rows[1];
   if (rows.length > 2) result.tomorrow = rows[2]; // Might not exist unless prepublished
+
+  // Normalize date format to string YYYY-MM-DD
+  for (const key in result) {
+      if (result[key] && result[key].date && typeof result[key].date === 'object') {
+          result[key].date = result[key].date.toISOString().split('T')[0];
+      } else if (result[key] && typeof result[key].date === 'string') {
+          result[key].date = result[key].date.split('T')[0];
+      }
+  }
 
   // Remove sensitive word if necessary, but spec says backend handles data
   // Assuming frontend hides the word until solved.
@@ -183,8 +200,8 @@ async function saveManualWordle(data) {
   // 6. Insert
   await db.pool.execute(
     `INSERT INTO wordle_data 
-      (date, puzzle_number, word, hint1, hint2, hint3, final_hint, vowel_count, vowel_letters, repeated_letters, source, locale) 
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      (date, puzzle_number, word, hint1, hint2, hint3, final_hint, vowel_count, vowel_letters, repeated_letters, source, locale, entry_type) 
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     [
       newDateStr,
       cleanPuzzleNumber,
@@ -197,7 +214,8 @@ async function saveManualWordle(data) {
       analysis.vowel_letters,
       analysis.repeated_letters,
       'manual',
-      locale
+      locale,
+      'manual'
     ]
   );
   
