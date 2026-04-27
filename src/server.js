@@ -42,8 +42,12 @@ async function startServer() {
   // Start Scheduler
   scheduler.startScheduler();
 
-  app.listen(config.server.port, () => {
-    logger.info(`Server is running on port ${config.server.port}`);
+  const PORT = process.env.PORT || config.server.port || 3000;
+
+app.listen(PORT, () => {
+  logger.info(`Server is running on port ${PORT}`);
+  logger.info(`API Base URL: ${config.server.apiBaseUrl}`);
+});
     logger.info(`API Base URL: ${config.server.apiBaseUrl}`);
   });
 }
